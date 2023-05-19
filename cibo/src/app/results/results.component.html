@@ -1,1 +1,4 @@
-<p>results works!</p>
+<div *ngIf="items">
+    <img src="{{items.product.image_url}}" alt="">
+    <h1>{{items.code}}</h1>
+</div>

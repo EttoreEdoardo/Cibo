@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, ParamMap } from '@angular/router';
+import { Observable } from 'rxjs';
+import { FoodService } from '../food.service';
 
 @Component({
   selector: 'app-search',
@@ -8,40 +8,28 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
   styleUrls: ['./search.component.css']
 })
 export class SearchComponent {
-  //@ts-ignore
-  food: Data = {};
-  productList!: any[];
-  //https://world.openfoodfacts.org/api/v0/product/;
-  //https://world.openfoodfacts.org/cgi/search.pl?search_terms&search_simple=1&action=process
-                  
-  searchText: string = "";
+  query: string | undefined;
+  obsProduct: Observable<Object> | undefined;
+  results: any;
 
-  constructor(private route: ActivatedRoute, public http: HttpClient){ }
+  constructor(public food: FoodService) {}
 
-  getRouterParam = (params: ParamMap) =>
-  {    
-    let uri_param = params.get('id'); //Ottengo l'id dalla ParamMap
+  submit(query: HTMLInputElement): void {
+    if (!query.value) {
+      return;
+    }
+    this.query = query.value;
+    this.obsProduct = this.food.searchProduct(this.query);
+    this.obsProduct.subscribe((data) => {
+      this.results = data;
+      console.log(this.results);
+    });
   }
 
-  getId = (a: string) => {
-    const url = "https://world.openfoodfacts.org/api/v0/product/"
-    if (a != "") {
-      url + a;
-    } else {
-      this.route.paramMap.subscribe(this.getRouterParam);
-    }
-  }  
-
-  searchProduct() {
-    if (this.searchText && this.searchText.length > 0) {
-      this.http.get(`https:world.openfoodfacts.org/cgi/search.pl?{{search_terms}}&search_simple=1&action=process`)
-        .subscribe((response: any) => {
-          this.productList = response.data;
-          console.log(this.productList);
-          
-        })
-    } else {
-      this.productList = []; 
+  renderResults(res: any): void {
+    this.results = null;
+    if (res && res.tracks && res.tracks.items) {
+      this.results = res.tracks.items;
     }
   }
 }
